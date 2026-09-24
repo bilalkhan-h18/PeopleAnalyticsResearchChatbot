@@ -4,9 +4,11 @@
     python scripts/find_papers.py --query "psychological safety teams" --topic teams
     python scripts/find_papers.py --list-only             # write the shortlist, don't download
 
-Only open-access PDFs are downloaded. Every run appends to corpus/_found_papers.csv
+Only open-access PDFs are downloaded. Queries match titles and abstracts (not full
+text), and each result is screened for relevance before download - with Claude, or
+with keyword rules if you pass --no-llm. Every run appends to corpus/_found_papers.csv
 so you can review what was found (including paywalled papers worth getting through
-your library or company subscription).
+your library or company subscription, and what was skipped as off-topic).
 
 OpenAlex is free and needs no key. Set OPENALEX_EMAIL in .env to use its faster
 "polite pool".
@@ -22,6 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pa_chatbot.config import settings  # noqa: E402  (also sets up HTTPS trust)
+from pa_chatbot.screening import REMOVE, screen  # noqa: E402
 
 import requests  # noqa: E402
 
@@ -43,11 +46,14 @@ DEFAULT_SEARCHES = {
 
 
 def search(query: str, per_page: int, from_year: int | None) -> list[dict]:
-    filters = ["type:article|review|book-chapter"]
+    # Match titles/abstracts only. A plain `search` also matches full text, which
+    # combined with sorting by citations surfaced famous but unrelated papers
+    # (cancer statistics, PRISMA) that merely mention "analytics" somewhere.
+    query = query.replace(",", " ")
+    filters = [f"title_and_abstract.search:{query}", "type:article|review|book-chapter"]
     if from_year:
         filters.append(f"from_publication_date:{from_year}-01-01")
     params = {
-        "search": query,
         "filter": ",".join(filters),
         "sort": "cited_by_count:desc",
         "per-page": per_page,
@@ -99,6 +105,7 @@ def main() -> None:
     parser.add_argument("--per-query", type=int, default=15)
     parser.add_argument("--from-year", type=int, default=None)
     parser.add_argument("--list-only", action="store_true")
+    parser.add_argument("--no-llm", action="store_true", help="screen relevance with keyword rules instead of Claude")
     args = parser.parse_args()
 
     searches = {args.topic: [args.query]} if args.query else DEFAULT_SEARCHES
@@ -120,13 +127,18 @@ def main() -> None:
                 except requests.RequestException as exc:
                     print(f"  ! search failed: {exc}")
                     continue
+                infos = []
                 for work in works:
                     info = describe(work)
-                    if not info["title"] or info["openalex_id"] in seen:
-                        continue
-                    seen.add(info["openalex_id"])
+                    if info["title"] and info["openalex_id"] not in seen:
+                        seen.add(info["openalex_id"])
+                        infos.append(info)
+                verdicts = screen(infos, use_llm=not args.no_llm) if infos else []
+                for info, verdict in zip(infos, verdicts):
                     status, fname = "paywalled", ""
-                    if info["pdf_url"]:
+                    if verdict.decision == REMOVE:
+                        status = "off-topic"
+                    elif info["pdf_url"]:
                         fname = safe_name(info)
                         dest = folder / fname
                         if dest.exists():

@@ -48,7 +48,16 @@ python scripts/find_papers.py                          # built-in people analyti
 python scripts/find_papers.py --query "psychological safety teams" --topic teams
 ```
 
-This searches [OpenAlex](https://openalex.org), downloads open-access PDFs into `corpus/<topic>/`, and logs everything, including paywalled papers you may want to get through a library, to `corpus/_found_papers.csv`.
+This searches [OpenAlex](https://openalex.org), screens each result for relevance with Claude, downloads open-access PDFs into `corpus/<topic>/`, and logs everything, including paywalled papers you may want to get through a library, to `corpus/_found_papers.csv`.
+
+To clear out off-topic papers already downloaded:
+
+```bash
+python scripts/clean_corpus.py            # writes corpus/_cleanup_review.csv - nothing is deleted
+python scripts/clean_corpus.py --apply    # moves "remove" PDFs to corpus/_removed/
+```
+
+Edit the `decision` column in the review file before applying if you disagree with any call. Only files from the finder's log are touched, never PDFs you added yourself.
 
 ### 2. Index it
 
@@ -112,7 +121,9 @@ pa_chatbot/
   prompts.py            system prompt and answer modes (edit these to tune behaviour)
   assistant.py          plan → retrieve → cited streaming answer
   ingest.py             indexing CLI
+  screening.py          is this paper relevant? (Claude or keyword rules)
 scripts/find_papers.py  OpenAlex open-access paper finder
+scripts/clean_corpus.py remove off-topic papers the finder downloaded
 scripts/evaluate.py     retrieval/answer checks on eval/questions.txt
 legacy/                 the original university notebook, for reference
 ```

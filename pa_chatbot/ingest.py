@@ -4,7 +4,8 @@
     python -m pa_chatbot.ingest --rebuild       # wipe and re-index everything
     python -m pa_chatbot.ingest --no-llm        # skip Claude tagging (free, weaker metadata)
 
-Sub-folders of corpus/ are kept as a "collection" label (e.g. corpus/attrition/).
+Sub-folders of corpus/ are kept as a "collection" label (e.g. corpus/attrition/);
+folders starting with "_" are skipped.
 Only new or changed files are processed, so re-running is cheap.
 """
 
@@ -29,7 +30,11 @@ def paper_header(meta: dict) -> str:
 
 def ingest(rebuild: bool = False, use_llm: bool = True) -> None:
     corpus = settings.corpus_dir
-    pdfs = sorted(p for p in corpus.rglob("*") if p.suffix.lower() == ".pdf")
+    # Folders starting with "_" (e.g. corpus/_removed/) are ignored.
+    pdfs = sorted(
+        p for p in corpus.rglob("*")
+        if p.suffix.lower() == ".pdf" and not any(part.startswith("_") for part in p.relative_to(corpus).parts)
+    )
     if not pdfs:
         sys.exit(f"No PDFs found under {corpus}. Add papers (sub-folders are fine) and re-run.")
 
