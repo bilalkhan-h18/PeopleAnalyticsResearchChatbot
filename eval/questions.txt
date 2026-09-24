@@ -1,0 +1,13 @@
+# One question per line. Add the papers you expect to be retrieved after "=>" (optional,
+# matched case-insensitively against paper titles), e.g.:
+#   What predicts voluntary turnover? => job embeddedness; turnover meta-analysis
+What predicts voluntary employee turnover, and which predictors are strongest?
+How does the Job Demands-Resources model explain burnout and engagement?
+What methods are appropriate for analysing time-to-exit when many employees are still employed?
+How mature is HR analytics adoption in organisations, and what holds it back?
+Does remote or hybrid work affect productivity and promotion outcomes?
+What are the ethical and privacy risks of people analytics?
+How can organisational network analysis be used to understand collaboration?
+What does the evidence say about pay transparency and pay gaps?
+How should I measure employee engagement, and which validated scales exist?
+What explains why high performers leave?
