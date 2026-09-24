@@ -20,10 +20,10 @@ import sys
 import time
 from pathlib import Path
 
-import requests
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from pa_chatbot.config import settings  # noqa: E402
+from pa_chatbot.config import settings  # noqa: E402  (also sets up HTTPS trust)
+
+import requests  # noqa: E402
 
 API = "https://api.openalex.org/works"
 

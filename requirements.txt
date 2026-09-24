@@ -4,6 +4,7 @@ chromadb>=1.5,<2
 rank-bm25>=0.2.2
 pymupdf>=1.26
 python-dotenv>=1.0
+truststore>=0.10  # trust the OS certificate store (corporate networks)
 requests>=2.31
 numpy
 # Optional: stronger embeddings via EMBEDDING_MODEL (pulls in PyTorch, ~1 GB)
