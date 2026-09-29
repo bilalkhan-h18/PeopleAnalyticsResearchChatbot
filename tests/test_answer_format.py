@@ -61,3 +61,20 @@ def test_format_answer_numbers_papers_by_first_citation():
 def test_system_prompt_policy_toggle():
     assert "general knowledge - not from your library" in build_system_prompt(True)
     assert "Answer only from the retrieved excerpts" in build_system_prompt(False)
+
+
+def test_metadata_cache_roundtrips_unicode_and_survives_corruption(tmp_path, monkeypatch):
+    import locale
+
+    from pa_chatbot import metadata
+
+    cache_path = tmp_path / "paper_metadata.json"
+    monkeypatch.setattr(type(metadata.settings), "metadata_cache", property(lambda self: cache_path))
+    # Simulate Windows' default cp1252 locale encoding.
+    monkeypatch.setattr(locale, "getpreferredencoding", lambda *a, **k: "cp1252")
+    metadata.save_cache({"p1": {"summary": "β = 0.21, Cohen’s d, Müller"}})
+    assert metadata.load_cache()["p1"]["summary"] == "β = 0.21, Cohen’s d, Müller"
+
+    cache_path.write_text('{"p1": {"summ', encoding="utf-8")  # truncated by a crash
+    assert metadata.load_cache() == {}
+    assert (tmp_path / "paper_metadata.corrupt.json").exists()

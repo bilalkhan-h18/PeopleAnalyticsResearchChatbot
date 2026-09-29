@@ -89,14 +89,27 @@ def file_hash(path: Path) -> str:
 
 
 def load_cache() -> dict:
-    if settings.metadata_cache.exists():
-        return json.loads(settings.metadata_cache.read_text())
-    return {}
+    path = settings.metadata_cache
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        # A crash mid-write can leave a truncated file; keep it for reference and
+        # start fresh (papers already in the index aren't re-tagged anyway).
+        backup = path.with_suffix(".corrupt.json")
+        path.replace(backup)
+        print(f"    ! {path.name} was unreadable; moved to {backup.name} and starting a new cache")
+        return {}
 
 
 def save_cache(cache: dict) -> None:
-    settings.metadata_cache.parent.mkdir(parents=True, exist_ok=True)
-    settings.metadata_cache.write_text(json.dumps(cache, indent=2, ensure_ascii=False))
+    path = settings.metadata_cache
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Write to a temp file and swap it in, so an interrupted save can't corrupt the cache.
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(cache, indent=2, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(path)
 
 
 def fallback_metadata(path: Path, pages: list[Page]) -> dict:

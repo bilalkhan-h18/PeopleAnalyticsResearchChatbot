@@ -37,7 +37,7 @@ def test_claude_screening_maps_ids_and_falls_back(monkeypatch):
 def _run(corpus, *args):
     env = dict(os.environ, CORPUS_DIR=str(corpus), DATA_DIR=str(corpus.parent / "data"))
     return subprocess.run([sys.executable, str(ROOT / "scripts" / "clean_corpus.py"), *args],
-                          env=env, capture_output=True, text=True, check=True).stdout
+                          env=env, capture_output=True, text=True, encoding="utf-8", check=True).stdout
 
 
 def test_review_then_apply(tmp_path):
@@ -53,7 +53,7 @@ def test_review_then_apply(tmp_path):
     for r in rows:
         (corpus / "hr" / r["file"]).write_bytes(b"%PDF")
     (corpus / "mine" / "own.pdf").write_bytes(b"%PDF")
-    with open(corpus / "_found_papers.csv", "w", newline="") as fh:
+    with open(corpus / "_found_papers.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=fields)
         w.writeheader()
         w.writerows(rows)

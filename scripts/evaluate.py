@@ -19,7 +19,7 @@ from pa_chatbot.assistant import AnswerResult, ResearchAssistant, plan_queries  
 
 def load_questions(path: Path) -> list[tuple[str, list[str]]]:
     out = []
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
@@ -63,7 +63,7 @@ def main() -> None:
         print(f"\nRecall of expected papers: {found_total}/{expected_total}")
     if args.answer:
         out = ROOT / "eval" / "results.md"
-        out.write_text("\n".join(report))
+        out.write_text("\n".join(report), encoding="utf-8")
         print(f"\nAnswers written to {out}")
 
 
