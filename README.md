@@ -75,6 +75,14 @@ python -m pa_chatbot.ingest --rebuild  # start over (e.g. after changing EMBEDDI
 python app.py                          # http://127.0.0.1:7860
 ```
 
+From Spyder, Jupyter or IPython, use the launcher instead. Gradio's server can't run inside those consoles, so the launcher runs it as a separate process:
+
+```python
+import launcher
+launcher.start()    # opens the browser; logs go to data/app.log
+launcher.stop()
+```
+
 ### Checking quality
 
 ```bash
@@ -113,6 +121,7 @@ To cut costs, set `ANSWER_MODEL=claude-sonnet-5` and/or `UTILITY_MODEL=claude-so
 
 ```
 app.py                  Gradio 5 UI
+launcher.py             start/stop the UI from Spyder or Jupyter
 pa_chatbot/
   config.py             settings from .env
   chunking.py           PDF → pages → overlapping, page-tracked chunks
