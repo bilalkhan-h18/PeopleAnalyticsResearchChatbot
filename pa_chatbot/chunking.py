@@ -1,5 +1,6 @@
 """PDF text extraction and page-aware chunking."""
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,11 +26,28 @@ class Chunk:
     index: int
 
 
+def os_path(path: Path) -> str:
+    """Path string that also works beyond Windows' 260-character limit.
+
+    Deep folders (e.g. OneDrive) plus long paper titles easily exceed it, and
+    Windows then reports the file as missing. An extended-length prefix
+    (backslash backslash question-mark backslash) lifts the limit.
+    """
+    full = os.path.abspath(path)
+    if os.name == "nt" and len(full) >= 240 and not full.startswith("\\\\?\\"):
+        if full.startswith("\\\\"):  # network share: \\server\share -> \\?\UNC\server\share
+            return "\\\\?\\UNC\\" + full[2:]
+        return "\\\\?\\" + full
+    return full
+
+
 def read_pdf_pages(path: Path) -> list[Page]:
     import pymupdf
 
+    with open(os_path(path), "rb") as fh:
+        data = fh.read()
     pages = []
-    with pymupdf.open(path) as doc:
+    with pymupdf.open(stream=data, filetype="pdf") as doc:
         for i, page in enumerate(doc, start=1):
             text = clean_text(page.get_text("text"))
             if text:

@@ -9,7 +9,7 @@ import json
 import re
 from pathlib import Path
 
-from .chunking import Page
+from .chunking import Page, os_path
 from .config import settings
 from .llm import structured_call
 
@@ -82,7 +82,7 @@ _SYSTEM = (
 
 def file_hash(path: Path) -> str:
     h = hashlib.sha256()
-    with open(path, "rb") as f:
+    with open(os_path(path), "rb") as f:
         for block in iter(lambda: f.read(1 << 20), b""):
             h.update(block)
     return h.hexdigest()[:16]

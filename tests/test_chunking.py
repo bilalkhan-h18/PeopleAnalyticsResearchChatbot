@@ -42,3 +42,15 @@ def test_strip_reference_list_drops_bibliography():
 def test_strip_reference_list_ignores_early_heading():
     pages = [Page(1, "Contents\nReferences\n")] + [Page(i, "Body") for i in range(2, 11)]
     assert len(strip_reference_list(pages)) == 10
+
+
+def test_os_path_adds_long_path_prefix_on_windows(monkeypatch):
+    from pa_chatbot import chunking
+
+    monkeypatch.setattr(chunking.os, "name", "nt")
+    monkeypatch.setattr(chunking.os.path, "abspath", lambda p: str(p))
+    long_path = "C:\\Users\\me\\" + "x" * 250 + ".pdf"
+    assert chunking.os_path(long_path) == "\\\\?\\" + long_path
+    assert chunking.os_path("C:\\short.pdf") == "C:\\short.pdf"
+    unc = "\\\\server\\share\\" + "y" * 250 + ".pdf"
+    assert chunking.os_path(unc) == "\\\\?\\UNC\\server\\share\\" + "y" * 250 + ".pdf"

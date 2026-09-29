@@ -45,11 +45,23 @@ def ingest(rebuild: bool = False, use_llm: bool = True) -> None:
     indexed = store.paper_ids()
 
     current_ids = set()
-    added = skipped = failed = 0
+    first_seen: dict[str, Path] = {}
+    added = skipped = failed = duplicates = unreadable = 0
     for n, path in enumerate(pdfs, start=1):
-        pid = file_hash(path)
-        current_ids.add(pid)
         rel = path.relative_to(corpus)
+        try:
+            pid = file_hash(path)
+        except OSError as exc:  # locked, removed mid-run, or an unreadable path
+            print(f"[{n}/{len(pdfs)}] {rel}\n    ! could not open: {exc}")
+            failed += 1
+            unreadable += 1
+            continue
+        current_ids.add(pid)
+        if pid in first_seen:
+            print(f"[{n}/{len(pdfs)}] {rel}\n    - identical to {first_seen[pid]}, skipped (you can delete this copy)")
+            duplicates += 1
+            continue
+        first_seen[pid] = rel
         if pid in indexed:
             skipped += 1
             continue
@@ -95,13 +107,16 @@ def ingest(rebuild: bool = False, use_llm: bool = True) -> None:
         added += 1
 
     # Files that were deleted or changed on disk leave stale entries behind.
+    # Only prune when every file could be opened; otherwise a temporarily locked
+    # file (e.g. mid OneDrive sync) would be dropped from the index.
     removed = 0
-    for stale in indexed - current_ids:
-        store.delete_paper(stale)
-        removed += 1
+    if not unreadable:
+        for stale in indexed - current_ids:
+            store.delete_paper(stale)
+            removed += 1
 
     print(
-        f"\nDone. Added {added}, unchanged {skipped}, removed {removed}, failed {failed}. "
+        f"\nDone. Added {added}, unchanged {skipped}, removed {removed}, failed {failed}, duplicates skipped {duplicates}. "
         f"Index now holds {len(store.paper_ids())} papers / {store.count()} chunks."
     )
 
