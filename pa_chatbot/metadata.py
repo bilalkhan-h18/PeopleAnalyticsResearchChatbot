@@ -29,6 +29,8 @@ PA_TOPICS = [
     "culture & climate",
     "HR analytics adoption & maturity",
     "ethics, privacy & algorithmic management",
+    "people-performance linkage & ROI",
+    "sales & customer outcomes",
     "measurement & methods",
     "other",
 ]

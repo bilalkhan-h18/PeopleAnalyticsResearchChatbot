@@ -59,7 +59,7 @@ def search_result_blocks(hits: list[Hit]) -> list[dict]:
         {
             "type": "search_result",
             "source": h.id,
-            "title": f"{h.metadata['label']} - {h.metadata['title']} ({h.pages})",
+            "title": f"{h.metadata['label']} - {h.metadata['title']} ({h.pages}) [{h.metadata.get('paper_type') or 'unknown type'}]",
             "content": [{"type": "text", "text": h.text}],
             "citations": {"enabled": True},
         }

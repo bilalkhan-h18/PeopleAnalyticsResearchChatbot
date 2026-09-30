@@ -30,6 +30,9 @@ def test_user_content_carries_search_results_then_question():
     assert content[0]["type"] == "search_result"
     assert content[0]["source"] == "c1"
     assert content[0]["citations"] == {"enabled": True}
+    assert content[0]["title"].endswith("[unknown type]")
+    hits[0].metadata["paper_type"] = "meta-analysis"
+    assert build_user_content("q", "Evidence pack", hits)[0]["title"].endswith("[meta-analysis]")
     assert content[-1]["type"] == "text" and "Why do people leave?" in content[-1]["text"]
     assert "hypotheses" in content[-1]["text"].lower()
 

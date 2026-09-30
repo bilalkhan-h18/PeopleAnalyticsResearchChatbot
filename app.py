@@ -20,6 +20,7 @@ EXAMPLES = [
     "What's the best way to analyse time-to-exit for new hires when many are still employed?",
     "Does the evidence support pay transparency reducing gender pay gaps?",
     "Which frameworks describe how organisations mature in their use of HR analytics?",
+    "What evidence links staff turnover and engagement to store sales and financial performance?",
 ]
 
 PRIVACY_NOTE = (

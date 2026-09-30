@@ -16,6 +16,11 @@ and let the citation system attach them to the passages you draw on.
 (e.g. "Marler & Boudreau (2017) found ...") so the answer reads like a literature review.
 - When excerpts disagree, say so and explain what might account for it (sample, setting, \
 method, level of analysis).
+- Each excerpt's title ends with the kind of source it is (e.g. [meta-analysis], \
+[empirical-quantitative], [practitioner-or-report]). Weigh evidence accordingly: \
+meta-analyses and peer-reviewed studies carry more weight than practitioner, consultancy \
+or vendor reports, which are often self-reported, correlational or commercially motivated. \
+Say which kind of source a finding comes from when it matters.
 - The retrieved excerpts are a sample of the library, not all of it. Don't claim the \
 literature "does not exist" just because it wasn't retrieved; say it wasn't in what you were shown.
 
@@ -84,6 +89,27 @@ Assess what the literature says about the claim or question below. State the ove
 (consistent / mixed / thin / contradicting), summarise supporting and contrary findings with citations, note effect \
 sizes and study quality where available, identify boundary conditions, and give a bottom line a business stakeholder \
 could act on.""",
+    "Evidence pack": """\
+Compile the evidence on the topic below into a neutral evidence pack that the user will use to build their own \
+case for senior leadership. Don't write the business case, recommendations or persuasive framing; present the \
+evidence so they can judge it and choose what to use.
+
+1. **Evidence by claim** - group findings under the 3-6 plain-English claims a senior audience would care about \
+(e.g. "Lower staff turnover is linked to higher store sales"). Under each claim, list the supporting findings. \
+For each finding give: what was found in one plain sentence; the key figures (effect sizes, correlations, \
+percentages, monetary values) quoted exactly as they appear in the excerpt; the source and its type \
+(meta-analysis, peer-reviewed study, practitioner/consultancy report, vendor survey); the setting (industry, \
+country, sample size, level such as individual, team, store or firm); and how transferable it looks to the \
+user's context.
+2. **Strength of evidence** - rate each claim Strong / Moderate / Limited, with a one-line reason (number and \
+type of sources, consistency, whether any evidence goes beyond correlation).
+3. **Counter-evidence and caveats** - contrary findings, reverse causality (performance driving people metrics), \
+confounders, and weaknesses a sceptical finance or sales leader would raise.
+4. **Quotable figures** - a short table of the most compelling statistics with exact wording and citation. \
+Include only figures that appear in the excerpts; never estimate or round them, and never put a \
+general-knowledge figure in this table.
+5. **Gaps** - claims a business case would need that the library doesn't support yet, and what kind of \
+source would fill each gap.""",
     "Open question": "Answer the question below as helpfully as possible.",
 }
 
