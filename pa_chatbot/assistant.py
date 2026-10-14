@@ -9,8 +9,8 @@ import anthropic
 
 from .config import settings, supports_effort
 from .llm import get_client, structured_call
-from .metadata import reference_entry
-from .prompts import DEFAULT_MODE, MODES, PLANNER_SCHEMA, PLANNER_SYSTEM, build_system_prompt
+from .metadata import cite_label, reference_entry
+from .prompts import AUDIENCES, DEFAULT_AUDIENCE, DEFAULT_MODE, MODES, PLANNER_SCHEMA, PLANNER_SYSTEM, build_system_prompt
 from .store import Hit, LiteratureStore
 
 log = logging.getLogger(__name__)
@@ -67,8 +67,11 @@ def search_result_blocks(hits: list[Hit]) -> list[dict]:
     ]
 
 
-def build_user_content(question: str, mode: str, hits: list[Hit]) -> list[dict]:
+def build_user_content(question: str, mode: str, hits: list[Hit], audience: str = DEFAULT_AUDIENCE) -> list[dict]:
     instructions = MODES.get(mode, MODES[DEFAULT_MODE])
+    audience_note = AUDIENCES.get(audience, "")
+    if audience_note:
+        instructions += f"\n\nAudience: {audience_note} Tailor language, emphasis and length to them."
     note = "" if hits else (
         "\n\nNo excerpts were retrieved from the library for this question "
         "(the library may be empty or not cover it)."
@@ -76,6 +79,25 @@ def build_user_content(question: str, mode: str, hits: list[Hit]) -> list[dict]:
     return search_result_blocks(hits) + [
         {"type": "text", "text": f"<task>\n{instructions}\n</task>\n\n<question>\n{question}\n</question>{note}"}
     ]
+
+
+_SOURCE_KIND = {
+    "meta-analysis": "meta-analysis",
+    "systematic-review": "review",
+    "narrative-review": "review",
+    "empirical-quantitative": "study",
+    "empirical-qualitative": "qualitative study",
+    "mixed-methods": "study",
+    "theory": "theory paper",
+    "book-or-chapter": "book",
+    "practitioner-or-report": "industry report",
+}
+
+
+def short_source(meta: dict) -> str:
+    """'Harter et al. (2002), meta-analysis' - compact enough for the foot of a business answer."""
+    kind = _SOURCE_KIND.get(meta.get("paper_type", ""))
+    return f"{cite_label(meta)}, {kind}" if kind else cite_label(meta)
 
 
 def format_answer(content_blocks, hits: list[Hit]) -> tuple[str, str, str]:
@@ -130,9 +152,10 @@ def format_answer(content_blocks, hits: list[Hit]) -> tuple[str, str, str]:
 
     references = ""
     if paper_number:
-        references = "\n\n---\n**References**\n\n" + "\n".join(
-            f"[{n}] {reference_entry(papers[pid])}  " for pid, n in sorted(paper_number.items(), key=lambda kv: kv[1])
-        )
+        # Compact source line; full references and quotes live in the side panel.
+        references = "\n\n---\n<small>**Sources:** " + " · ".join(
+            f"[{n}] {short_source(papers[pid])}" for pid, n in sorted(paper_number.items(), key=lambda kv: kv[1])
+        ) + "</small>"
     return "".join(parts) + references, "".join(plain), "\n".join(lines)
 
 
@@ -148,6 +171,7 @@ class ResearchAssistant:
         allow_general_knowledge: bool = True,
         year_min: int | None = None,
         n_sources: int = settings.default_sources,
+        audience: str = DEFAULT_AUDIENCE,
     ) -> Iterator[Event | AnswerResult]:
         """Yields Events while working and an AnswerResult last.
 
@@ -172,7 +196,7 @@ class ResearchAssistant:
             kwargs["betas"] = ["server-side-fallback-2026-07-01"]
             kwargs["fallbacks"] = "default"
 
-        messages = list(history) + [{"role": "user", "content": build_user_content(question, mode, hits)}]
+        messages = list(history) + [{"role": "user", "content": build_user_content(question, mode, hits, audience)}]
         streamed = ""
         with get_client().beta.messages.stream(
             model=model,

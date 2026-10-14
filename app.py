@@ -1,4 +1,4 @@
-"""People Analytics Research Assistant - Gradio 5 UI.
+"""People Analytics Advisor - Gradio 5 UI.
 
     python app.py            # http://127.0.0.1:7860
 """
@@ -10,17 +10,17 @@ import gradio as gr
 
 from pa_chatbot.assistant import AnswerResult, ResearchAssistant
 from pa_chatbot.config import settings
-from pa_chatbot.prompts import DEFAULT_MODE, MODES
+from pa_chatbot.prompts import AUDIENCES, DEFAULT_AUDIENCE, DEFAULT_MODE, MODES
 
 assistant = ResearchAssistant()
 
 EXAMPLES = [
-    "Our engineering attrition jumped after the return-to-office mandate. How should I frame and test whether the mandate caused it?",
-    "I think managers' span of control drives engagement scores down. What theory supports or challenges this, and what hypotheses could I test?",
-    "What's the best way to analyse time-to-exit for new hires when many are still employed?",
-    "Does the evidence support pay transparency reducing gender pay gaps?",
-    "Which frameworks describe how organisations mature in their use of HR analytics?",
     "What evidence links staff turnover and engagement to store sales and financial performance?",
+    "Help me build a case for linking our HR data with sales data at store level.",
+    "How do I convince a sceptical CFO that people analytics is worth investing in?",
+    "Early leaver rates are high in our first 90 days. What should I look at first?",
+    "What people metrics should a retail business put on an executive dashboard?",
+    "How could I show the cost of turnover to the business in a way leaders will act on?",
 ]
 
 PRIVACY_NOTE = (
@@ -38,7 +38,7 @@ def library_summary() -> str:
     return f"**{len(papers)} papers** / {assistant.store.count()} passages{span}"
 
 
-def respond(message, chat, api_history, mode, allow_gk, year_min, n_sources):
+def respond(message, chat, api_history, mode, audience, allow_gk, year_min, n_sources):
     message = (message or "").strip()
     if not message:
         yield chat, api_history, gr.update(), ""
@@ -54,6 +54,7 @@ def respond(message, chat, api_history, mode, allow_gk, year_min, n_sources):
             allow_general_knowledge=allow_gk,
             year_min=int(year_min) if year_min else None,
             n_sources=int(n_sources),
+            audience=audience,
         ):
             if isinstance(item, AnswerResult):
                 chat[-1]["content"] = item.markdown
@@ -86,8 +87,8 @@ def clear():
     return [], [], "", ""
 
 
-with gr.Blocks(title="People Analytics Research Assistant", theme=gr.themes.Soft()) as demo:
-    gr.Markdown("## People Analytics Research Assistant\nLiterature, frameworks and approaches for your workforce questions, grounded in your own library.")
+with gr.Blocks(title="People Analytics Advisor", theme=gr.themes.Soft()) as demo:
+    gr.Markdown("## People Analytics Advisor\nBusiness-focused answers, business cases and analysis plans, backed by your research library.")
     api_history = gr.State([])
 
     with gr.Row():
@@ -98,10 +99,10 @@ with gr.Blocks(title="People Analytics Research Assistant", theme=gr.themes.Soft
                 show_copy_button=True,
                 render_markdown=True,
                 sanitize_html=True,
-                placeholder="Describe a workforce problem, a working thesis, or a research question.",
+                placeholder="Ask about a workforce problem, a business case, a stakeholder, or an analysis you're planning.",
             )
             box = gr.Textbox(
-                placeholder="e.g. Why might high performers be leaving faster than others, and how could I test it?",
+                placeholder="e.g. How do I show the Head of Retail that staff turnover is costing us sales?",
                 show_label=False,
                 lines=2,
                 submit_btn=True,
@@ -110,10 +111,12 @@ with gr.Blocks(title="People Analytics Research Assistant", theme=gr.themes.Soft
             gr.Markdown(PRIVACY_NOTE)
         with gr.Column(scale=1):
             mode = gr.Dropdown(list(MODES), value=DEFAULT_MODE, label="Answer mode")
+            audience = gr.Dropdown(list(AUDIENCES), value=DEFAULT_AUDIENCE, label="Audience",
+                                   info="Who you're preparing this for.")
             allow_gk = gr.Checkbox(
                 value=True,
                 label="Allow general knowledge beyond my library",
-                info="Marked in answers as '(general knowledge - not from your library)'.",
+                info="Marked in answers as '(general knowledge)'.",
             )
             year_min = gr.Number(value=0, label="Only papers published from (0 = any year)", precision=0)
             n_sources = gr.Slider(4, 24, value=settings.default_sources, step=1, label="Excerpts to retrieve")
@@ -122,7 +125,7 @@ with gr.Blocks(title="People Analytics Research Assistant", theme=gr.themes.Soft
             with gr.Accordion("Sources for the last answer", open=True):
                 sources = gr.Markdown()
 
-    inputs = [box, chatbot, api_history, mode, allow_gk, year_min, n_sources]
+    inputs = [box, chatbot, api_history, mode, audience, allow_gk, year_min, n_sources]
     outputs = [chatbot, api_history, sources, box]
     box.submit(respond, inputs, outputs)
     clear_btn.click(clear, None, [chatbot, api_history, sources, box])

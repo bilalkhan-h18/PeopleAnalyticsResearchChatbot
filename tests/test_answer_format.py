@@ -26,7 +26,7 @@ def test_reference_entry_has_doi_link():
 
 def test_user_content_carries_search_results_then_question():
     hits = [_hit("c1", "p1", ["Ann Lee"], "2020", "Paper one")]
-    content = build_user_content("Why do people leave?", "Hypothesis builder", hits)
+    content = build_user_content("Why do people leave?", "Business case", hits, audience="Finance (CFO)")
     assert content[0]["type"] == "search_result"
     assert content[0]["source"] == "c1"
     assert content[0]["citations"] == {"enabled": True}
@@ -34,7 +34,9 @@ def test_user_content_carries_search_results_then_question():
     hits[0].metadata["paper_type"] = "meta-analysis"
     assert build_user_content("q", "Evidence pack", hits)[0]["title"].endswith("[meta-analysis]")
     assert content[-1]["type"] == "text" and "Why do people leave?" in content[-1]["text"]
-    assert "hypotheses" in content[-1]["text"].lower()
+    assert "executive summary" in content[-1]["text"].lower()
+    assert "Audience: Finance leadership" in content[-1]["text"]
+    assert "Audience:" not in build_user_content("q", "Quick answer", hits)[-1]["text"]
 
 
 def test_format_answer_numbers_papers_by_first_citation():
@@ -55,14 +57,14 @@ def test_format_answer_numbers_papers_by_first_citation():
     assert plain == "Intro. Kim found X. Lee found Y."
     assert "Kim found X.<sup>[1]</sup>" in md
     assert "Lee found Y.<sup>[2]</sup>" in md
-    assert "[1] Kim" not in md  # references list uses full entries
-    assert "**References**" in md and "Paper two" in md
+    assert "**Sources:** [1] Kim (2018) · [2] Lee (2020)" in md  # compact line, no full references
+    assert "Paper two" not in md and "Paper two" in sources
     assert "Also retrieved" in sources and "Paper three" in sources
     assert sources.count('"quoted words"') == 2  # deduped per paper
 
 
 def test_system_prompt_policy_toggle():
-    assert "general knowledge - not from your library" in build_system_prompt(True)
+    assert '"(general knowledge)"' in build_system_prompt(True)
     assert "Answer only from the retrieved excerpts" in build_system_prompt(False)
 
 

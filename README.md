@@ -1,12 +1,11 @@
-# People Analytics Research Assistant
+# People Analytics Advisor
 
-A research partner for people analytics work. Describe a workforce problem or a working thesis, and it searches **your own library** of academic and practitioner literature, then gives you:
+A day-to-day advisor for a People Analyst. Ask about a workforce problem, a business case, a stakeholder you need to win over, or an analysis you're planning. It answers in direct, business-focused language, backed by evidence from **your own library** of research and industry reports:
 
-- the relevant research, with page-level citations you can check,
-- theories and frameworks that could structure the problem (e.g. JD-R, Job Embeddedness, Social Exchange),
-- testable hypotheses,
-- analytical approaches suited to typical HR data, and the threats to validity,
-- practical, ethical and stakeholder considerations.
+- the bottom line first, in business terms (sales, productivity, cost, risk),
+- business cases and stakeholder pitches tailored to the audience (executives, Finance, sales and retail leaders and others),
+- practical analysis plans using the data a company already holds,
+- evidence with checkable citations, weighted by how credible each source is.
 
 It evolved from `legacy/litgen_rag_model.py` (a university Colab RAG notebook on OpenAI + LangChain). This version runs locally on **Claude** with a **Gradio 5** UI.
 
@@ -27,9 +26,9 @@ question ─► Claude plans 3-5 academic search queries
 | Search | Vector + BM25 with reciprocal rank fusion, max 3 excerpts per paper | Exact terms ("UWES", "JD-R") and meaning both count; no single book dominates |
 | Answering | Claude with search-result citations, adaptive thinking, 6 answer modes | Citations are tied to the actual passages, not invented |
 
-**Answer modes:** Research brief (default), Frameworks & theories, Hypothesis builder, Methods & measurement, Evidence check, Open question.
+**Answer modes:** Quick answer (default), Business case, Stakeholder pitch, Evidence pack, Analysis plan, Ideas & quick wins, and Academic deep-dive for when you do want the theory. An **Audience** setting tailors the language and emphasis to who you're preparing for.
 
-A "general knowledge" toggle lets Claude go beyond your library. When it does, it marks those points *(general knowledge - not from your library)*.
+A "general knowledge" toggle lets Claude go beyond your library. When it does, it marks those points *(general knowledge)*.
 
 ## Setup
 

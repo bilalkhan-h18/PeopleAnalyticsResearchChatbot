@@ -22,7 +22,7 @@ def test_ask_end_to_end(store, monkeypatch):  # noqa: F811
     monkeypatch.setattr("pa_chatbot.llm.get_client", lambda: fake)
 
     history = [{"role": "user", "content": "hi"}, {"role": "assistant", "content": "hello"}]
-    items = list(ResearchAssistant(store).ask("Why do people quit?", history, mode="Hypothesis builder", n_sources=4))
+    items = list(ResearchAssistant(store).ask("Why do people quit?", history, mode="Business case", n_sources=4, audience="Executive team"))
 
     assert isinstance(items[0], Event) and items[0].kind == "status"
     assert any(isinstance(i, Event) and i.kind == "delta" for i in items)
@@ -40,4 +40,5 @@ def test_ask_end_to_end(store, monkeypatch):  # noqa: F811
     assert answer["betas"] == ["server-side-fallback-2026-07-01"]
     assert answer["thinking"] == {"type": "adaptive"}
     assert answer["messages"][:2] == history
-    assert "Why do people quit?" in answer["messages"][-1]["content"][-1]["text"]
+    task = answer["messages"][-1]["content"][-1]["text"]
+    assert "Why do people quit?" in task and "Executive summary" in task and "Senior executives" in task
